@@ -386,31 +386,16 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
 		return false;
 	};
 
-	// parse picture index and gallery index from URL (#&pid=1&gid=2)
+	// parse picture index from URL (#pid)
 	var photoswipeParseHash = function() {
-		var hash = window.location.hash.substring(1),
-		params = {};
+		var hash = window.location.hash.substring(1);
+		var params = {};
 
-		if(hash.length < 5) {
+		if(hash.length < 1) {
 			return params;
 		}
 
-		var vars = hash.split('&');
-		for (var i = 0; i < vars.length; i++) {
-			if(!vars[i]) {
-				continue;
-			}
-			var pair = vars[i].split('=');  
-			if(pair.length < 2) {
-				continue;
-			}           
-			params[pair[0]] = pair[1];
-		}
-
-		if(params.gid) {
-			params.gid = parseInt(params.gid, 10);
-		}
-
+		params['pid'] = hash;
 		return params;
 	};
 
@@ -424,9 +409,6 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
 
 		// define options (if needed)
 		options = {
-
-			// define gallery index (for URL)
-			galleryUID: galleryElement.getAttribute('data-pswp-uid'),
 
 			getThumbBoundsFn: function(index) {
 				// See Options -> getThumbBoundsFn section of documentation for more info
@@ -452,10 +434,16 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
 	    		}
 		    } else {
 		    	// in URL indexes start from 1
-		    	options.index = parseInt(index, 10) - 1;
+		    	let idx = parseInt(index, 10) - 1;
+		    	if (idx >= 0 && idx < items.length) {
+		    		options.index = idx;
+		    	}
 		    }
 	    } else {
-	    	options.index = parseInt(index, 10);
+	    	let idx = parseInt(index, 10);
+	    	if (idx >= 0 && idx < items.length) {
+	    		options.index = idx;
+	    	}
 	    }
 
 	    // exit if index not found
@@ -476,14 +464,13 @@ var initPhotoSwipeFromDOM = function(gallerySelector) {
 	var galleryElements = document.querySelectorAll( gallerySelector );
 
 	for(var i = 0, l = galleryElements.length; i < l; i++) {
-		galleryElements[i].setAttribute('data-pswp-uid', i+1);
 		galleryElements[i].onclick = onThumbnailsClick;
 	}
 
-	// Parse URL and open gallery if it contains #&pid=3&gid=1
+	// Parse URL and open gallery if it contains #pid
 	var hashData = photoswipeParseHash();
-	if(hashData.pid && hashData.gid) {
-		openPhotoSwipe( hashData.pid ,  galleryElements[ hashData.gid - 1 ], true, true );
+	if(hashData.pid) {
+		openPhotoSwipe( hashData.pid ,  galleryElements[0], true, true );
 	}
 };
 

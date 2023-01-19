@@ -1,6 +1,6 @@
-/*! PhotoSwipe Default UI - 4.1.3 - 2019-01-08
+/*! PhotoSwipe Default UI - 4.1.3 - 2020-10-17
 * http://photoswipe.com
-* Copyright (c) 2019 Dmitry Semenov; */
+* Copyright (c) 2020 Dmitry Semenov; */
 /**
 *
 * UI on top of main sliding area (caption, arrows, close button, etc.).
@@ -236,9 +236,12 @@ var PhotoSwipeUI_Default =
 				share_text = _options.getTextForShare(shareButtonData);
 
 				shareURL = shareButtonData.url.replace('{{url}}', encodeURIComponent(page_url) )
+									.replace('{{enc2x_url}}', encodeURIComponent(encodeURIComponent(page_url) ) )
 									.replace('{{image_url}}', encodeURIComponent(image_url) )
+									.replace('{{enc2x_image_url}}', encodeURIComponent(encodeURIComponent(image_url) ) )
 									.replace('{{raw_image_url}}', image_url )
-									.replace('{{text}}', encodeURIComponent(share_text) );
+									.replace('{{text}}', encodeURIComponent(share_text) )
+									.replace('{{enc2x_text}}', encodeURIComponent(encodeURIComponent(share_text) ) );
 
 				shareButtonOut += '<a href="' + shareURL + '" target="_blank" '+
 									'class="pswp__share--' + shareButtonData.id + '"' +
@@ -727,22 +730,27 @@ var PhotoSwipeUI_Default =
 
 		if(e.detail && e.detail.pointerType === 'mouse') {
 
-			// close gallery if clicked outside of the image
-			if(_hasCloseClass(target)) {
-				pswp.close();
-				return;
+			// Silently ignore right-click events.
+			if (!e.detail.rightClick) {
+
+				// close gallery if clicked outside of the image
+				if(_hasCloseClass(target)) {
+					pswp.close();
+					return;
+				}
+
+				if(framework.hasClass(target, 'pswp__img')) {
+					if(pswp.getZoomLevel() === 1 && pswp.getZoomLevel() <= pswp.currItem.fitRatio) {
+						if(_options.clickToCloseNonZoomable) {
+							pswp.close();
+						}
+					} else {
+						pswp.toggleDesktopZoom(e.detail.releasePoint);
+					}
+				}
+
 			}
 
-			if(framework.hasClass(target, 'pswp__img')) {
-				if(pswp.getZoomLevel() === 1 && pswp.getZoomLevel() <= pswp.currItem.fitRatio) {
-					if(_options.clickToCloseNonZoomable) {
-						pswp.close();
-					}
-				} else {
-					pswp.toggleDesktopZoom(e.detail.releasePoint);
-				}
-			}
-			
 		} else {
 
 			// tap anywhere (except buttons) to toggle visibility of controls

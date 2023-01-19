@@ -222,11 +222,6 @@ Keyboard left or right arrow key navigation. Option can be changed dynamically (
 If set to `false` disables history module (back button to close gallery, unique URL for each slide). You can also just exclude `history.js` module from your build.
 
 
-### `galleryUID` <code class="default">integer</code> <code class="default">1</code>
-
-Gallery unique ID. Used by History module when forming URL. For example, second picture of gallery with UID 1 will have URL: `http://example.com/#&gid=1&pid=2`.
-
-
 ### <a name="galleryPIDs"></a> `galleryPIDs` <code class="default">boolean</code> <code class="default">false</code>
 
 Enables custom IDs for each slide object that are used when forming URL. If option set set to `true`, slide objects must have `pid` (picture identifier) property that can be a string or an integer. For example:
@@ -250,7 +245,7 @@ var slides = [
 ];
 ```
 
-... second slide will have URL `http://example.com/#&gid=1&pid=image-two`.
+... second slide will have URL `http://example.com/#image-two`.
 
 Read more about how to implement custom PID in [the FAQ section](faq.html#custom-pid-in-url).
 
@@ -370,11 +365,14 @@ indexIndicatorSep: ' / ',
 
 {% raw %}
 // Share buttons
-// 
+//
 // Available variables for URL:
-// {{url}}             - url to current page
-// {{text}}            - title
-// {{image_url}}       - encoded image url
+// {{url}}             - url to current page, encoded once
+// {{enc2x_url}}       - url to current page, encoded twice
+// {{text}}            - title, encoded once
+// {{enc2x_text}}      - title, encoded twice
+// {{image_url}}       - image url, encoded once
+// {{enc2x_image_url}} - image url, encoded twice
 // {{raw_image_url}}   - raw image url
 shareButtons: [
 	{id:'facebook', label:'Share on Facebook', url:'https://www.facebook.com/sharer/sharer.php?u={{url}}'},

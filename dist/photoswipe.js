@@ -1,6 +1,6 @@
-/*! PhotoSwipe - v4.1.3 - 2019-01-08
+/*! PhotoSwipe - v4.1.3 - 2020-10-17
 * http://photoswipe.com
-* Copyright (c) 2019 Dmitry Semenov; */
+* Copyright (c) 2020 Dmitry Semenov; */
 (function (root, factory) { 
 	if (typeof define === 'function' && define.amd) {
 		define(factory);
@@ -3198,10 +3198,11 @@ var tapTimer,
 	_dispatchTapEvent = function(origEvent, releasePoint, pointerType) {		
 		var e = document.createEvent( 'CustomEvent' ),
 			eDetail = {
-				origEvent:origEvent, 
-				target:origEvent.target, 
-				releasePoint: releasePoint, 
-				pointerType:pointerType || 'touch'
+				origEvent: origEvent,
+				pointerType: pointerType || 'touch',
+				releasePoint: releasePoint,
+				target: origEvent.target,
+				rightClick: pointerType === 'mouse' && origEvent.which === 3
 			};
 
 		e.initCustomEvent( 'pswpTap', true, true, eDetail );
@@ -3264,6 +3265,7 @@ _registerModule('Tap', {
 		}
 	}
 });
+
 
 /*>>tap*/
 
@@ -3448,18 +3450,17 @@ _registerModule('DesktopZoom', {
  * history.js:
  *
  * - Back button to close gallery.
- * 
- * - Unique URL for each slide: example.com/&pid=1&gid=3
- *   (where PID is picture index, and GID and gallery index)
- *   
+ *
+ * - Unique URL for each slide: example.com/#pid
+ *   (where PID is picture index)
+ *
  * - Switch URL when slides change.
- * 
+ *
  */
 
 
 var _historyDefaultOptions = {
 	history: true,
-	galleryUID: 1
 };
 
 var _historyUpdateTimeout,
@@ -3491,41 +3492,30 @@ var _historyUpdateTimeout,
 	},
 
 	// pid - Picture index
-	// gid - Gallery index
 	_parseItemIndexFromURL = function() {
-		var hash = _getHash(),
-			params = {};
+		var hash = _getHash();
+		var params = {};
 
-		if(hash.length < 5) { // pid=1
+		if(hash.length < 1) {
 			return params;
 		}
 
-		var i, vars = hash.split('&');
-		for (i = 0; i < vars.length; i++) {
-			if(!vars[i]) {
-				continue;
-			}
-			var pair = vars[i].split('=');	
-			if(pair.length < 2) {
-				continue;
-			}
-			params[pair[0]] = pair[1];
-		}
+		params['pid'] = hash;
 		if(_options.galleryPIDs) {
 			// detect custom pid in hash and search for it among the items collection
 			var searchfor = params.pid;
-			params.pid = 0; // if custom pid cannot be found, fallback to the first item
-			for(i = 0; i < _items.length; i++) {
+			params.pid = -1; // if custom pid cannot be found, return -1
+			for(var i = 0; i < _items.length; i++) {
 				if(_items[i].pid === searchfor) {
 					params.pid = i;
 					break;
 				}
 			}
 		} else {
-			params.pid = parseInt(params.pid,10)-1;
-		}
-		if( params.pid < 0 ) {
-			params.pid = 0;
+			params.pid = parseInt(params.pid, 10) - 1;
+			if (params.pid < 0 || params.pid >= _items.length) {
+				params.pid = -1;
+			}
 		}
 		return params;
 	},
@@ -3556,7 +3546,7 @@ var _historyUpdateTimeout,
 			// carry forward any custom pid assigned to the item
 			pid = item.pid;
 		}
-		var newHash = _initialHash + '&'  +  'gid=' + _options.galleryUID + '&' + 'pid=' + pid;
+		var newHash = _initialHash + pid;
 
 		if(!_historyChanged) {
 			if(_windowLoc.hash.indexOf(newHash) === -1) {
@@ -3615,12 +3605,6 @@ _registerModule('History', {
 			_supportsPushState = ('pushState' in history);
 
 
-			if(_initialHash.indexOf('gid=') > -1) {
-				_initialHash = _initialHash.split('&gid=')[0];
-				_initialHash = _initialHash.split('?gid=')[0];
-			}
-			
-
 			_listen('afterChange', self.updateURL);
 			_listen('unbindEvents', function() {
 				framework.unbind(window, 'hashchange', self.onHashChange);
@@ -3667,20 +3651,16 @@ _registerModule('History', {
 				}
 			});
 			_listen('firstUpdate', function() {
+				// For safety, if an invalid item was requested on the first update, fallback to the first item.
 				_currentItemIndex = _parseItemIndexFromURL().pid;
+				if (_currentItemIndex === -1) {
+					_currentItemIndex = 0;
+				}
 			});
 
-			
 
-			
-			var index = _initialHash.indexOf('pid=');
-			if(index > -1) {
-				_initialHash = _initialHash.substring(0, index);
-				if(_initialHash.slice(-1) === '&') {
-					_initialHash = _initialHash.slice(0, -1);
-				}
-			}
-			
+			_initialHash = ''
+
 
 			setTimeout(function() {
 				if(_isOpen) { // hasn't destroyed yet
@@ -3699,9 +3679,16 @@ _registerModule('History', {
 			}
 			if(!_hashChangedByScript) {
 
-				_hashChangedByHistory = true;
-				self.goTo( _parseItemIndexFromURL().pid );
-				_hashChangedByHistory = false;
+				var pid = _parseItemIndexFromURL().pid;
+				if (pid === -1) {
+					_closedFromURL = true;
+					self.close();
+					return;
+				} else {
+					_hashChangedByHistory = true;
+					self.goTo(pid);
+					_hashChangedByHistory = false;
+				}
 			}
 			
 		},

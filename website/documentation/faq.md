@@ -101,15 +101,15 @@ photoSwipe.init();
 to make URLs to a single image look like this:
 
 ```
-http://example.com/#&gid=1&pid=custom-first-id
-http://example.com/#&gid=1&pid=custom-second-id
+http://example.com/#custom-first-id
+http://example.com/#custom-second-id
 ```
 
 instead of:
 
 ```
-http://example.com/#&gid=1&pid=1
-http://example.com/#&gid=1&pid=2
+http://example.com/#1
+http://example.com/#2
 ```
 
 ... enable options `history:true, galleryPIDs:true` and add `pid` (unique picture identifier) property to slide objects (`pid` can be an integer or a string), for example:

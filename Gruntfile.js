@@ -10,6 +10,8 @@ module.exports = function(grunt) {
 
   'use strict';
 
+  var sass = require('node-sass');
+
   var jekyllConfig = "isLocal : false \r\n"+
       "permalink: /:title/ \r\n"+
       "exclude: ['.json', '.rvmrc', '.rbenv-version', 'README.md', 'Rakefile'," +
@@ -41,10 +43,13 @@ module.exports = function(grunt) {
     clean: {
       files: ['dist']
     },
-    
-    sass: {                            
-      dist: {                      
-        files: {      
+
+    sass: {
+      options: {
+        implementation: sass
+      },
+      dist: {
+        files: {
           'dist/photoswipe.css': 'src/css/main.scss',
           'dist/default-skin/default-skin.css': 'src/css/default-skin/default-skin.scss'
         }
